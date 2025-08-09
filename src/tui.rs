@@ -59,8 +59,12 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>, app: &mut App)
                     } else {
                         match key.code {
                             KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
-                            KeyCode::Up | KeyCode::Char('k') => app.selected_index = app.selected_index.saturating_sub(1),
-                            KeyCode::Down | KeyCode::Char('j') => app.selected_index = app.selected_index.saturating_add(1),
+                            KeyCode::Up | KeyCode::Char('k') => {
+                                app.selected_index = app.selected_index.saturating_sub(1);
+                            }
+                            KeyCode::Down | KeyCode::Char('j') => {
+                                app.selected_index = app.selected_index.saturating_add(1);
+                            }
                             KeyCode::PageUp => {
                                 app.selected_index = app.selected_index.saturating_sub(10);
                             }

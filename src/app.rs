@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use ratatui::widgets::ListState;
 use sysinfo::{CpuRefreshKind, MemoryRefreshKind, ProcessRefreshKind, RefreshKind, System, Pid};
 
 #[derive(Copy, Clone)]
@@ -18,6 +19,7 @@ pub struct App {
     pub selected_index: usize,
     pub selected_pid: Option<Pid>,
     pub tick_rate: Duration,
+    pub list_state: ListState,
 }
 
 impl App {
@@ -29,6 +31,9 @@ impl App {
                 .with_processes(ProcessRefreshKind::everything()),
         );
         sys.refresh_all();
+        let mut list_state = ListState::default();
+        list_state.select(Some(0));
+
         Self {
             sys,
             sort_by: SortBy::Cpu,
@@ -38,6 +43,7 @@ impl App {
             selected_index: 0,
             selected_pid: None,
             tick_rate: Duration::from_millis(500),
+            list_state,
         }
     }
 

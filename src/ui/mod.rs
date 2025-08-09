@@ -1,5 +1,5 @@
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Gauge, List, ListItem, Paragraph, Wrap},
@@ -16,14 +16,14 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
             Constraint::Length(3),
             Constraint::Min(7),
             Constraint::Min(5),
-            Constraint::Length(1),
+            Constraint::Length(3),
         ])
         .split(frame.size());
 
     render_header(frame, chunks[0]);
     render_system(frame, chunks[1], app);
     render_processes(frame, chunks[2], app);
-    render_footer(frame, chunks[3]);
+    render_footer(frame, chunks[3], app);
 
     if app.show_help {
         render_help_popup(frame);
@@ -140,7 +140,7 @@ fn render_processes(frame: &mut Frame, area: Rect, app: &mut App) {
     let mut items: Vec<ListItem> = Vec::with_capacity(processes.len() + 1);
     items.push(header);
 
-    for (i, (pid, proc_)) in processes.iter().enumerate().take(200) {
+    for (i, (pid, proc_)) in processes.iter().enumerate() {
         let name = proc_.name().to_string();
         let cpu = proc_.cpu_usage();
         let mem_kib = proc_.memory();
@@ -155,11 +155,19 @@ fn render_processes(frame: &mut Frame, area: Rect, app: &mut App) {
     } else {
         format!("Processes | filter: {}{}", app.filter, if app.is_filtering { "_" } else { "" })
     };
+    // Update scrolling state selection
+    app.list_state.select(Some(app.selected_index));
     let list = List::new(items).block(Block::default().borders(Borders::ALL).title(title_text));
-    frame.render_widget(list, area);
+    frame.render_stateful_widget(list, area, &mut app.list_state);
 }
 
-fn render_footer(frame: &mut Frame, area: Rect) {
+fn render_footer(frame: &mut Frame, area: Rect, app: &App) {
+    let cols = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(20), Constraint::Length(36)])
+        .split(area);
+
+    // Left: key hints
     let parts = vec![
         Span::raw("Press q to quit. "),
         Span::styled("Arrows/jk", Style::default().fg(Color::Green)),
@@ -171,13 +179,24 @@ fn render_footer(frame: &mut Frame, area: Rect) {
         Span::styled("/", Style::default().fg(Color::Green)),
         Span::raw(" filter, "),
         Span::styled("?", Style::default().fg(Color::Green)),
-        Span::raw(" help, "),
-        Span::styled("+/-", Style::default().fg(Color::Green)),
-        Span::raw(" tick. "),
+        Span::raw(" help"),
     ];
-    let text = Line::from(parts);
-    let p = Paragraph::new(text).block(Block::default().borders(Borders::ALL));
-    frame.render_widget(p, area);
+    let left = Paragraph::new(Line::from(parts)).block(Block::default().borders(Borders::ALL));
+    frame.render_widget(left, cols[0]);
+
+    // Right: compact status
+    let procs = app.sys.processes().len();
+    let tick = app.tick_rate.as_millis();
+    let sort = match app.sort_by {
+        SortBy::Cpu => "CPU",
+        SortBy::Mem => "MEM",
+        SortBy::Pid => "PID",
+    };
+    let right_text = Line::from(Span::raw(format!("procs: {procs} | sort: {sort} | tick: {tick}ms")));
+    let right = Paragraph::new(right_text)
+        .alignment(Alignment::Right)
+        .block(Block::default().borders(Borders::ALL));
+    frame.render_widget(right, cols[1]);
 }
 
 fn render_help_popup(frame: &mut Frame) {
