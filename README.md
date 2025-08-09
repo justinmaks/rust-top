@@ -1,6 +1,9 @@
 ## rust-top
 
-An htop-like terminal process viewer written in Rust using ratatui + crossterm + sysinfo.
+An htop-like terminal process viewer written in Rust using ratatui + crossterm + sysinfo
+
+### Screenshot
+![rust-top screenshot](assets/rust-top.png)
 
 ### Features
 - CPU and memory overview, plus per‑core CPU gauges
