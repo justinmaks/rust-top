@@ -39,7 +39,3 @@ An htop-like terminal process viewer written in Rust using ratatui + crossterm +
 - Paging and stable selection across filters
 - Configurable refresh rate and help popup
 
-### License
-TBD by the repository owner.
-
-
